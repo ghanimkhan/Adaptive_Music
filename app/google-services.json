@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "240585207018",
+    "firebase_url": "https://dbmeter-38c1c.firebaseio.com",
+    "project_id": "dbmeter-38c1c",
+    "storage_bucket": "dbmeter-38c1c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:240585207018:android:2e4b6deed19780cfaafb93",
+        "android_client_info": {
+          "package_name": "com.androxus.adaptive"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "240585207018-p1a48ju4mkh929vos63u6enclqv92gsd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDwVbwqN6BQ1nO38z8id9WSD2LdXxDPv4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "240585207018-p1a48ju4mkh929vos63u6enclqv92gsd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
