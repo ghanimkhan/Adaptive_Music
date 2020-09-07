@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     TextView mStatusView, mStatusAvgView, mStatus;
     MediaRecorder mRecorder;
     SeekBar seekBar;
+    int checkState=1;
 
     boolean played=false;
     int lastvolume;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private long timestamp = System.currentTimeMillis() / 1000L;
     private long lastTimestamp = System.currentTimeMillis() / 1000L;
     private String schedule = "NA";
+
     private AudioManager myAudioManager;
 
 
@@ -84,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
     */
  //   SettingsContentObserver settingsContentObserver;
     MaterialButtonToggleGroup btnToggle;
+    MaterialButtonToggleGroup btnToggleState;
+
     int dblstrength=65;
 
 
@@ -93,12 +97,15 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final MaterialButtonToggleGroup tGroup =findViewById(R.id.toggleGroup);
+        final MaterialButtonToggleGroup tGroupState =findViewById(R.id.toggleGroupState);
 
 
-        mStatusView = (TextView) findViewById(R.id.dbText);
-        mStatusAvgView = (TextView) findViewById(R.id.dbAvgText);
+//
+//        mStatusView = (TextView) findViewById(R.id.dbText);
+//        mStatusAvgView = (TextView) findViewById(R.id.dbAvgText);
 
         myAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        final SwitchMaterial switchMaterial=findViewById(R.id.switchMaterial);
 
         final int volume_level = myAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         int maxVolume = myAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
@@ -109,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         /////////////////////////////toggle button
 
         btnToggle = findViewById(R.id.toggleGroup);
+        btnToggleState=findViewById(R.id.toggleGroupState);
 
         btnToggle.addOnButtonCheckedListener(new MaterialButtonToggleGroup.OnButtonCheckedListener() {
             @Override
@@ -137,7 +145,37 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        SwitchMaterial switchMaterial=findViewById(R.id.switchMaterial);
+        btnToggleState.addOnButtonCheckedListener(new MaterialButtonToggleGroup.OnButtonCheckedListener() {
+            @Override
+            public void onButtonChecked(MaterialButtonToggleGroup group, int checkedId, boolean isChecked) {
+                if (isChecked) {
+                    if (checkedId == R.id.btnIncrease) {
+                        //..
+                        checkState=0;
+
+                        if (switchMaterial.isChecked()) {
+                            switchMaterial.setChecked(false);
+                        }
+
+                    }
+                    if (checkedId == R.id.btnDicrease) {
+                        //..
+                        checkState=1;
+                        if (switchMaterial.isChecked()) {
+                            switchMaterial.setChecked(false);
+                        }
+
+
+                    }
+
+
+                }
+
+
+            }
+        });
+
+
 
         switchMaterial.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -304,11 +342,16 @@ public class MainActivity extends AppCompatActivity {
         double amplitude = mRecorder.getMaxAmplitude();
         if(amplitude > 0 && amplitude < 1000000) {
             double dbl = convertdDb(amplitude);
-            mStatusView.setText(Double.toString(dbl)+ "dB");
+           // mStatusView.setText(Double.toString(dbl)+ "dB");
             int num= (int) dbl;
 
             if(dbl>=dblstrength){
-                myAudioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_PLAY_SOUND);
+                if(checkState==0) {
+                    myAudioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_PLAY_SOUND);
+                }
+                else{
+                    myAudioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_PLAY_SOUND);
+                }
 
             }
             if(dbl<=dblstrength){
@@ -331,7 +374,7 @@ public class MainActivity extends AppCompatActivity {
                 timestamp = lastTimestamp;
                 float average = (float) sum/count;
 
-                mStatusAvgView.setText(String.format("%.2f", average)+ "dB");
+               // mStatusAvgView.setText(String.format("%.2f", average)+ "dB");
 
                 Date currentTime = Calendar.getInstance().getTime();
 
