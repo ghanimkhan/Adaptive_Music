@@ -1,8 +1,11 @@
 package com.androxus.adaptive;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.media.MediaRecorder;
@@ -17,7 +20,10 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.widget.Toast;
 
@@ -39,9 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-
 public class MainActivity extends AppCompatActivity {
-
     static final private double EMA_FILTER = 0.6;
     private static double mEMA = 0.0;
     final Handler mHandler = new Handler();
@@ -49,17 +53,13 @@ public class MainActivity extends AppCompatActivity {
     MediaRecorder mRecorder;
     SeekBar seekBar;
     int checkState=1;
-
     boolean played=false;
-    int lastvolume;
-    int previousVolume;
     final Runnable updater = new Runnable() {
 
         public void run() {
             updateTv();
         }
 
-        ;
     };
     Thread runner;
     int countnew;
@@ -70,6 +70,9 @@ public class MainActivity extends AppCompatActivity {
     private String schedule = "NA";
 
     private AudioManager myAudioManager;
+
+    private int MIC_PERMISSION_CODE = 1;
+
 
 
     Date c = Calendar.getInstance().getTime();
@@ -99,10 +102,6 @@ public class MainActivity extends AppCompatActivity {
         final MaterialButtonToggleGroup tGroup =findViewById(R.id.toggleGroup);
         final MaterialButtonToggleGroup tGroupState =findViewById(R.id.toggleGroupState);
 
-
-//
-//        mStatusView = (TextView) findViewById(R.id.dbText);
-//        mStatusAvgView = (TextView) findViewById(R.id.dbAvgText);
 
         myAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         final SwitchMaterial switchMaterial=findViewById(R.id.switchMaterial);
@@ -155,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
 
                         if (switchMaterial.isChecked()) {
                             switchMaterial.setChecked(false);
+                            runner=null;
                         }
 
                     }
@@ -163,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
                         checkState=1;
                         if (switchMaterial.isChecked()) {
                             switchMaterial.setChecked(false);
+                            runner=null;
                         }
 
 
@@ -300,31 +301,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startRecorder() {
-        if (mRecorder == null) {
-            mRecorder = new MediaRecorder();
-            mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-            mRecorder.setOutputFile("/dev/null");
-            try {
-                mRecorder.prepare();
-            } catch (java.io.IOException ioe) {
-                android.util.Log.e("[Monkey]", "IOException: " +
-                        android.util.Log.getStackTraceString(ioe));
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
 
-            } catch (java.lang.SecurityException e) {
-                android.util.Log.e("[Monkey]", "SecurityException: " +
-                        android.util.Log.getStackTraceString(e));
-            }
-            try {
-                mRecorder.start();
-            } catch (java.lang.SecurityException e) {
-                android.util.Log.e("[Monkey]", "SecurityException: " +
-                        android.util.Log.getStackTraceString(e));
-            }
+            if (mRecorder == null) {
+                mRecorder = new MediaRecorder();
+                mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+                mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+                mRecorder.setOutputFile("/dev/null");
+                try {
+                    mRecorder.prepare();
+                } catch (java.io.IOException ioe) {
+                    android.util.Log.e("[Monkey]", "IOException: " +
+                            android.util.Log.getStackTraceString(ioe));
 
-            //mEMA = 0.0;
+                } catch (java.lang.SecurityException e) {
+                    android.util.Log.e("[Monkey]", "SecurityException: " +
+                            android.util.Log.getStackTraceString(e));
+                }
+                try {
+                    mRecorder.start();
+                } catch (java.lang.SecurityException e) {
+                    android.util.Log.e("[Monkey]", "SecurityException: " +
+                            android.util.Log.getStackTraceString(e));
+                }
+
+                //mEMA = 0.0;
+            }
+        } else {
+            requestStoragePermission();
         }
+
 
     }
 
@@ -349,12 +357,12 @@ public class MainActivity extends AppCompatActivity {
                 if(checkState==0) {
                     myAudioManager.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_PLAY_SOUND);
                 }
-                else{
+                else if(checkState==1){
                     myAudioManager.adjustVolume(AudioManager.ADJUST_LOWER, AudioManager.FLAG_PLAY_SOUND);
                 }
 
             }
-            if(dbl<=dblstrength){
+            else if(dbl<=dblstrength){
                 myAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, (int) seekBar.getProgress(), 0);
             }
 
@@ -422,6 +430,42 @@ public class MainActivity extends AppCompatActivity {
         mEMA = EMA_FILTER * amp + (1.0 - EMA_FILTER) * mEMA;
         return mEMA;
     }
+    private void requestStoragePermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                Manifest.permission.RECORD_AUDIO)) {
+            new AlertDialog.Builder(this)
+                    .setTitle("Permission needed")
+                    .setMessage("This permission is needed measure the noise around you")
+                    .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[] {Manifest.permission.RECORD_AUDIO}, MIC_PERMISSION_CODE);
+                        }
+                    })
+                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .create().show();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.RECORD_AUDIO}, MIC_PERMISSION_CODE);
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == MIC_PERMISSION_CODE)  {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission GRANTED", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Permission DENIED", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
 
 
 }
