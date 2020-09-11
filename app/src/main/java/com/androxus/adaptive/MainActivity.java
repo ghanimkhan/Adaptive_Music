@@ -2,8 +2,10 @@ package com.androxus.adaptive;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
@@ -93,8 +95,7 @@ public class MainActivity extends AppCompatActivity {
 
     int dblstrength=65;
 
-
-
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,6 +110,10 @@ public class MainActivity extends AppCompatActivity {
         final int volume_level = myAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         int maxVolume = myAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 
+
+        if (isServiceRunningInForeground(getApplicationContext(), MyService.class)) {
+
+        }
 
 
 
@@ -182,6 +187,10 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
 
+                    Intent intent = new Intent(MainActivity.this, MyService.class);
+                    intent.setAction(MyService.ACTION_START_FOREGROUND_SERVICE);
+                    startService(intent);
+
                     Toast.makeText(MainActivity.this, "Switch On", Toast.LENGTH_SHORT).show();
                     if (runner == null) {
                         runner = new Thread() {
@@ -201,6 +210,9 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("Noise", "start runner()");
                     }
                 } else {
+                    Intent intent = new Intent(MainActivity.this, MyService.class);
+                    intent.setAction(MyService.ACTION_STOP_FOREGROUND_SERVICE);
+                    startService(intent);
                     runner=null;
                     Toast.makeText(MainActivity.this, "Switch Off", Toast.LENGTH_SHORT).show();
                 }
@@ -400,6 +412,18 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+    }
+    public static boolean isServiceRunningInForeground(Context context, Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                if (service.foreground) {
+                    return true;
+                }
+
+            }
+        }
+        return false;
     }
 
     public double soundDb(double ampl) {
