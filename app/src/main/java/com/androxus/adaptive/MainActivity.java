@@ -11,11 +11,14 @@ import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.media.AudioManager;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -24,6 +27,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -103,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
         final MaterialButtonToggleGroup tGroup =findViewById(R.id.toggleGroup);
         final MaterialButtonToggleGroup tGroupState =findViewById(R.id.toggleGroupState);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         myAudioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         final SwitchMaterial switchMaterial=findViewById(R.id.switchMaterial);
@@ -301,6 +307,30 @@ public class MainActivity extends AppCompatActivity {
 //        getApplicationContext().getContentResolver().unregisterContentObserver(settingsContentObserver);
 //        super.onDestroy();
 //    }
+@Override
+public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.main_menu, menu);
+    return true;
+}
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                intent.setData(uri);
+                startActivity(intent);
+                return true;
+            case R.id.action_about:
+                Intent myIntent = new Intent(MainActivity.this, AboutActivity.class);
+                MainActivity.this.startActivity(myIntent);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     public void onResume() {
         super.onResume();

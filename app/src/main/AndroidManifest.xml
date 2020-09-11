@@ -20,10 +20,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service
-            android:name=".MyService"
-            android:enabled="true"
-            android:exported="true" />
+        <activity android:name=".AboutActivity"
+            android:label="About"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait"
+            >
+        </activity>
+<!--        <service-->
+<!--            android:name=""-->
+<!--            android:enabled="true"-->
+<!--            android:exported="true" />-->
     </application>
 
 </manifest>
